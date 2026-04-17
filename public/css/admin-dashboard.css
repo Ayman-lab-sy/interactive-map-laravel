@@ -1,0 +1,59 @@
+/* =========================
+   Dashboard Cards – Base
+========================= */
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.dashboard-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+/* =========================
+   Card Content
+========================= */
+.dashboard-card-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #334155;
+}
+
+.dashboard-card-number {
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: 10px;
+    color: #0f172a;
+}
+
+/* =========================
+   Card Variants (Meaning)
+========================= */
+.dashboard-card--info {
+    border-left: 4px solid #2563eb; /* أزرق */
+}
+
+.dashboard-card--warning {
+    border-left: 4px solid #f59e0b; /* برتقالي */
+}
+
+.dashboard-card--success {
+    border-left: 4px solid #16a34a; /* أخضر */
+}
+
+.dashboard-card--neutral {
+    border-left: 4px solid #64748b; /* رمادي */
+}

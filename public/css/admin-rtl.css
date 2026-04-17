@@ -1,0 +1,44 @@
+/* === FORCE RTL FOR ASSISTANT KNOWLEDGE === */
+
+.assistant-knowledge-editor,
+.assistant-knowledge-editor * {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+/* العناوين */
+.assistant-knowledge-editor h1,
+.assistant-knowledge-editor h2,
+.assistant-knowledge-editor h3 {
+    text-align: right !important;
+}
+
+/* Textarea */
+.assistant-knowledge-editor textarea {
+    direction: rtl !important;
+    text-align: right !important;
+    font-family: "Cairo", "Tajawal", sans-serif;
+    line-height: 1.9;
+    font-size: 15px;
+}
+
+/* Cards */
+.assistant-knowledge-editor .card {
+    border-radius: 10px;
+}
+
+/* Card header */
+.assistant-knowledge-editor .card-header {
+    text-align: right !important;
+    font-weight: 600;
+}
+
+/* Buttons */
+.assistant-knowledge-editor .btn {
+    float: right;
+}
+
+/* Alerts */
+.assistant-knowledge-editor .alert {
+    text-align: right !important;
+}

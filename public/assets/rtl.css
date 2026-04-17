@@ -1,0 +1,50 @@
+html[lang="ar"] body{
+    direction: rtl;
+    text-align: start;
+}
+
+body[dir="rtl"] .fl_left {
+    float: right;
+}
+body[dir="rtl"] .fl_right {
+    float: left;
+}
+
+.lang-nav > i {
+    margin-left: auto;
+    margin-right: .5rem;
+}
+.one_half, .one_third, .two_third, .one_quarter, .two_quarter, .three_quarter {
+    float: right;
+    margin: 0 4.21052% 0 0;
+}
+
+.first {
+    margin-right: 0;
+    clear: right;
+}
+#ctdetails ul li div i {
+
+	left: auto;
+	right: 0;
+
+}
+#ctdetails ul li div {
+	padding: 0 60px 0 0;
+}
+#ctdetails ul li div span {
+	text-align: start;
+}
+
+.wrapper {
+    text-align: start;
+}
+
+.grid-3 > li:nth-child(3n+1) {
+	margin-right: 0;
+	clear: right;
+}
+
+.one_third.last {
+    float: left;
+}
