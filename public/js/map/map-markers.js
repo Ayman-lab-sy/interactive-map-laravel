@@ -1,4 +1,31 @@
 // ========================================
+// ===== ازاحة الخريطة تلقائيا =====
+// ========================================
+
+function offsetMapForPopup(latlng, marker) {
+  const map = window.map;
+  if (!map) return;
+
+  const popupEl = marker.getPopup()?.getElement();
+  let popupHeight = 250;
+
+  if (popupEl) {
+    popupHeight = popupEl.offsetHeight || popupHeight;
+  }
+
+  const offsetY = popupHeight * 0.5;
+
+  const point = map.latLngToContainerPoint(latlng);
+  const newPoint = L.point(point.x, point.y - offsetY);
+  const newLatLng = map.containerPointToLatLng(newPoint);
+
+  map.panTo(newLatLng, {
+    animate: true,
+    duration: 0.5
+  });
+}
+
+// ========================================
 // ===== RENDER EVENTS =====
 // ========================================
 
@@ -123,6 +150,7 @@ function createMarker(event) {
     category: category,
     riseOnHover: true // 🔥 هذا مهم
   });
+  marker._offsetDone = false;
 
   // ======================
   // COLOR (نفس القديم)
@@ -236,6 +264,7 @@ function createMarker(event) {
   });
 
   marker.on('popupclose', function () {
+    marker._offsetDone = false;
     const el = marker.getElement();
     if (el) {
       const inner = el.querySelector('.custom-marker');
@@ -374,6 +403,12 @@ function renderPopup(data, eventId) {
     ` : ''}
   `;
   document.getElementById(`popup-${eventId}`).innerHTML = popupContent;
+  setTimeout(() => {
+    const ev = window.allMarkersMap?.[String(eventId)];
+    if (ev && ev.marker && ev.marker.isPopupOpen()) {
+      offsetMapForPopup(ev.marker.getLatLng(), ev.marker);
+    }
+  }, 120);
 }
 
 // ========================================
@@ -390,7 +425,7 @@ function formatDate(dateString) {
 }
 
 function shareEvent(id) {
-  let url = `${window.location.origin}/${window.locale}/event/${id}`;
+  let url = `${window.location.origin}/${window.locale}/event-preview/${id}`;
 
   // 🔥 قراءة الفلتر الحالي
   const filter = document.getElementById('filter')?.value;

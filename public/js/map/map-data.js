@@ -24,6 +24,7 @@ const governorateCoords = {
 // ========================================
 
 window.loadEvents = function() {
+  if (window.isPopupOpen) return;
   if (!window.map) return;
   if (!window.markersCluster) return;
   if (!window.governoratesLayer) return;
@@ -315,11 +316,11 @@ window.loadEvents = function() {
             const latlng = ev.marker.getLatLng();
             window.markersCluster.zoomToShowLayer(ev.marker, () => {
               window.map.setView(latlng, 10);
-              ev.marker.openPopup();
 
               setTimeout(() => {
-                window.isOpeningEvent = false;
-              }, 1500);
+                offsetMapForPopup(latlng, ev.marker);
+                ev.marker.openPopup();
+              }, 200);
             });
             window.eventOpened = true;
             window.targetEventId = null;

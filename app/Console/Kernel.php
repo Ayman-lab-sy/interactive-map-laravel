@@ -13,9 +13,18 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
-    protected function schedule(Schedule $schedule)
+    protected function schedule($schedule)
     {
-        // $schedule->command('inspire')->hourly();
+       // 📊 تقرير يومي
+        $schedule->command('media:publish daily')->dailyAt('08:00');
+
+        // 📢 Social (4 مرات)
+        $schedule->command('media:publish social')->dailyAt('10:00');
+        $schedule->command('media:publish social')->dailyAt('14:00');
+        $schedule->command('media:publish social')->dailyAt('18:00');
+        $schedule->command('media:publish social')->dailyAt('22:00');
+        $schedule->command('media:check-alerts')->hourly();
+        
     }
 
     /**

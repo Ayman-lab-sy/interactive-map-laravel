@@ -3,6 +3,7 @@ window.lastGov = null;
 window.lastFilter = null;
 window.lastFrom = null;
 window.lastTo = null;
+window.popupAdjusted = false;
 
 // ========================================
 // ===== DATA (STATE) =====

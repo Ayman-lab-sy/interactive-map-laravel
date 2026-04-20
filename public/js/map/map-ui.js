@@ -226,6 +226,7 @@ function showUI() {
 }
 
 window.map.on('popupopen', function () {
+  window.isPopupOpen = true;
   if (window.innerWidth <= 768) {
     document.body.classList.add('popup-focus');
     hideUI();
@@ -233,6 +234,7 @@ window.map.on('popupopen', function () {
 });
 
 window.map.on('popupclose', function () {
+  window.isPopupOpen = false;
   document.body.classList.remove('popup-focus');
 
   if (window.innerWidth <= 768) {

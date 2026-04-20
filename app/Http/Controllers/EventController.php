@@ -233,121 +233,9 @@ class EventController extends Controller
 
     public function stats(Request $request)
     {
-        $query = Event::where('status', 'verified');
+        $data = app(\App\Services\StatsService::class)->getStats($request);
 
-        // =========================
-        // 🎯 فلتر المحافظة
-        // =========================
-        if ($request->filled('governorate')) {
-            $query->where('governorate', $request->governorate);
-        }
-
-        // =========================
-        // 🎯 فلتر النوع
-        // =========================
-        if ($request->filled('category')) {
-            $query->where('category', 'like', '%' . $request->category . '%');
-        }
-
-        // =========================
-        // 🎯 فلتر الزمن (مرن)
-        // =========================
-        if ($request->filled('days')) {
-            $query->where('event_date', '>=', now()->subDays($request->days));
-        } else if ($request->filled('range')) {
-
-            if ($request->range === 'today') {
-                $query->whereBetween('event_date', [
-                    now()->startOfDay(),
-                    now()->endOfDay()
-                ]);
-            }
-
-            if ($request->range === 'week') {
-                $query->where('event_date', '>=', now()->subDays(7));
-            }
-
-            if ($request->range === 'month') {
-                $query->where('event_date', '>=', now()->subDays(30));
-            }
-        }
-
-        // =========================
-        // 📊 إجمالي
-        // =========================
-        $total = (clone $query)->count();
-
-        // =========================
-        // 🔥 مقارنة زمنية (جديد)
-        // =========================
-        $previousPeriod = null;
-
-        if ($request->filled('days')) {
-
-            $previousPeriod = (clone $query)
-                ->whereBetween('event_date', [
-                    now()->subDays($request->days * 2),
-                    now()->subDays($request->days)
-                ])
-                ->count();
-        }
-
-        // =========================
-        // 📊 حسب النوع
-        // =========================
-        $byCategory = (clone $query)
-            ->selectRaw('category, COUNT(*) as count')
-            ->groupBy('category')
-            ->pluck('count', 'category');
-
-        // =========================
-        // 📈 Timeline
-        // =========================
-        $timeline = (clone $query)
-            ->selectRaw('DATE(event_date) as date, COUNT(*) as count')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        // =========================
-        // 🔥 المحافظات
-        // =========================
-        $topGovernorates = (clone $query)
-            ->selectRaw('governorate, COUNT(*) as count')
-            ->whereNotNull('governorate')
-            ->groupBy('governorate')
-            ->orderByDesc('count')
-            ->limit(5)
-            ->get();
-
-        $topGovernorate = (clone $query)
-            ->selectRaw('governorate, COUNT(*) as count')
-            ->whereNotNull('governorate')
-            ->groupBy('governorate')
-            ->orderByDesc('count')
-            ->first();
-        
-        $byCategoryPercent = (clone $query)
-            ->selectRaw('category, COUNT(*) as count')
-            ->groupBy('category')
-            ->get()
-            ->map(function ($item) use ($total) {
-                return [
-                    'category' => $item->category,
-                    'count' => $item->count,
-                    'percent' => $total > 0 ? round(($item->count / $total) * 100, 1) : 0
-                ];
-            });
-
-        return response()->json([
-            'total' => $total,
-            'previous' => $previousPeriod,
-            'by_category' => $byCategory,
-            'timeline' => $timeline,
-            'top_governorates' => $topGovernorates,
-            'top_governorate' => $topGovernorate,
-            'by_category_percent' => $byCategoryPercent
-        ]);
+        return response()->json($data);
     }
 
     private function calculateConfidence($request, $hasImage = false)
@@ -467,11 +355,39 @@ class EventController extends Controller
             ? public_path('storage/' . $event->image)
             : public_path('images/og-default.jpg');
 
-        // إنشاء الصورة
-        $image = new Imagick($imagePath);
-        $image->resizeImage(1200, 630, Imagick::FILTER_LANCZOS, 1, true);
-        $image->cropImage(1200, 630, 0, 0);
+        // 🎯 إنشاء Canvas ثابت
+        $canvas = new Imagick();
+        $canvas->newImage(1200, 630, new ImagickPixel('black'));
 
+        // 📸 تحميل الصورة الأصلية
+        $image = new Imagick($imagePath);
+
+        // 🔥 خلفية مموهة (fill)
+        $bg = new Imagick($imagePath);
+        $bg->resizeImage(1200, 630, Imagick::FILTER_LANCZOS, 1, false);
+        $bg->blurImage(20, 10);
+        $bg->modulateImage(90, 80, 100);
+
+        // 🎯 إنشاء canvas من الخلفية
+        $canvas = new Imagick();
+        $canvas->newImage(1200, 630, new ImagickPixel('black'));
+        $canvas->compositeImage($bg, Imagick::COMPOSITE_OVER, 0, 0);
+
+        // 🎯 تصغيرها لتناسب بدون قص
+        $image->thumbnailImage(1200, 630, true);
+
+        // 🎯 توسيط الصورة داخل الكانفس
+        $x = (1200 - $image->getImageWidth()) / 2;
+        $y = (630 - $image->getImageHeight()) / 2;
+
+        $canvas->compositeImage($image, Imagick::COMPOSITE_OVER, $x, $y);
+
+        // استخدم canvas بدل image من هون وطالع
+        $image = $canvas;
+
+        $textBg = new Imagick();
+        $textBg->newImage(1200, 200, new ImagickPixel('rgba(0,0,0,0.75)'));
+        $image->compositeImage($textBg, Imagick::COMPOSITE_OVER, 0, 400);
         // تغميق
         $overlay = new Imagick();
         $overlay->newImage(1200, 630, new ImagickPixel('rgba(0,0,0,0.5)'));
@@ -492,38 +408,30 @@ class EventController extends Controller
         $shadow->setStrokeWidth(0);
         $shadow->setTextAlignment(Imagick::ALIGN_CENTER);
         $shadow->setFontSize(120);
-
-        $overlay2 = new Imagick();
-        $overlay2->newImage(1200, 400, new ImagickPixel('rgba(0,0,0,0.9)'));
-        $image->compositeImage($overlay2, Imagick::COMPOSITE_OVER, 0, 300);
         
-
-        $image->annotateImage($shadow, 520, 430, 0, $line1);
-        $image->annotateImage($draw, 518, 428, 0, $line1);
+        $image->annotateImage($draw, 598, 528, 0, $line1);
 
         // Badge
         $badge = new ImagickDraw();
         $badge->setFillColor('#ef4444');
-        $badge->roundRectangle(200, 80, 460, 160, 25, 25);
+        $badge->roundRectangle(260, 80, 560, 160, 25, 25);
         $image->drawImage($badge);
 
         $badgeText = new ImagickDraw();
         $badgeText->setFont(storage_path('app/fonts/Tajawal-Bold.ttf'));
         $badgeText->setFillColor('white');
-        $badgeText->setFontSize(40);
+        $badgeText->setFontSize(75);
         $badgeText->setTextAlignment(Imagick::ALIGN_CENTER);
 
+        $badgeShadow = new ImagickDraw();
+        $badgeShadow->setFont(storage_path('app/fonts/Tajawal-Bold.ttf'));
+        $badgeShadow->setFillColor('rgba(0,0,0,0.7)');
+        $badgeShadow->setFontSize(75);
+        $badgeShadow->setTextAlignment(Imagick::ALIGN_CENTER);
+
         $badgeTextFixed = $arabic->utf8Glyphs('عاجل');
-        $image->annotateImage($badgeText, 300, 120, 0, $badgeTextFixed);
-
-        // الموقع
-        $footer = new ImagickDraw();
-        $footer->setFont(storage_path('app/fonts/Tajawal-Bold.ttf'));
-        $footer->setFillColor('#cbd5f5');
-        $footer->setFontSize(85);
-        $footer->setTextAlignment(Imagick::ALIGN_CENTER);
-
-        $image->annotateImage($footer, 520, 580, 0, 'thealawites.com');
+        $image->annotateImage($badgeShadow, 412, 137, 0, $badgeTextFixed);
+        $image->annotateImage($badgeText, 410, 135, 0, $badgeTextFixed);
 
         $image->setImageFormat('png');
 
