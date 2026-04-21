@@ -10,7 +10,9 @@ class MediaService
     {
         $stats = app(StatsService::class)->getStats($request);
 
+        $narrative = app(NarrativeEngine::class)->analyze($stats);
+
         return app(ContentStrategyService::class)
-            ->decide($stats, $request);
+            ->decide($stats, $request, $narrative);
     }
 }
