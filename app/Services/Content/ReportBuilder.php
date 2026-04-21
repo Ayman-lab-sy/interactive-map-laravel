@@ -87,7 +87,20 @@ class ReportBuilder
         $hook = $this->pick($hooks);
         $analysisText = $this->pick($analysis);
 
-        $summary = "{$trendText}{$riskText}{$contextText}{$hook} حيث تم تسجيل {$total} حادثة موثقة، "
+        $headline = '';
+
+        if ($narrative) {
+            if ($narrative['trend'] === 'sharp_increase') {
+                $headline = '🚨 تصاعد حاد في الأحداث\n';
+            } elseif ($narrative['trend'] === 'increase') {
+                $headline = '⚠️ ارتفاع ملحوظ في الأحداث\n';
+            } elseif ($narrative['trend'] === 'decrease') {
+                $headline = '📉 تراجع في وتيرة الأحداث\n';
+            } else {
+                $headline = '📊 استقرار نسبي في الأحداث\n';
+            }
+        }
+        $summary = "{$headline}{$trendText}{$riskText}{$contextText}{$hook} حيث تم تسجيل {$total} حادثة موثقة، "
             . "تصدرت {$gov} المشهد بـ {$count} حالة، {$analysisText}";
 
         return [
@@ -125,8 +138,7 @@ class ReportBuilder
         ];
 
         $hook = $this->pick($hooks);
-        $analysisText = $this->pick($analysis);
-
+        $analysisText = $this->pick($analysis);       
         $summary = "{$hook} with {$total} recorded incidents, "
             . "{$gov} leading with {$count} cases, {$analysisText}";
 
