@@ -58,10 +58,36 @@ class ReportBuilder
                 $trendText = 'تعكس البيانات حالة مستقرة نسبياً، ';
             }
         }
+
+        $riskText = '';
+
+        if ($narrative) {
+            if ($narrative['risk'] === 'high') {
+            $riskText = 'وسط مستوى خطر مرتفع، ';
+            } elseif ($narrative['risk'] === 'medium') {
+            $riskText = 'وسط مستوى خطر متوسط، ';
+            } else {
+                $riskText = 'وسط مستوى خطر منخفض، ';
+            }
+        }
+
+        $contextText = '';
+
+        if ($narrative) {
+            if ($narrative['trend'] === 'sharp_increase' && $narrative['risk'] === 'high') {
+                $contextText = 'ما قد يعكس تصاعداً ممنهجاً في بعض المناطق، ';
+            } elseif ($narrative['trend'] === 'increase') {
+                $contextText = 'في مؤشر على تزايد التوتر في بعض المناطق، ';
+            } elseif ($narrative['trend'] === 'decrease') {
+                $contextText = 'ما قد يشير إلى تراجع مؤقت في وتيرة الأحداث، ';
+            } else {
+                $contextText = 'مع استمرار نمط عام دون تغيرات حادة، ';
+            }
+        }
         $hook = $this->pick($hooks);
         $analysisText = $this->pick($analysis);
 
-        $summary = "{$trendText}{$hook} حيث تم تسجيل {$total} حادثة موثقة، "
+        $summary = "{$trendText}{$riskText}{$contextText}{$hook} حيث تم تسجيل {$total} حادثة موثقة، "
             . "تصدرت {$gov} المشهد بـ {$count} حالة، {$analysisText}";
 
         return [
