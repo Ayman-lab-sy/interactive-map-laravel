@@ -14,9 +14,7 @@ class TelegramFormatter
             'alert' => "🚨 {$data['text']}",
 
             'report' => 
-            "📊 تقرير ميداني\n\n" .
-
-            trim($data['summary']) . "\n\n" .
+            $this->normalizeText($data['summary']) . "\n\n" .
 
             "──────────────\n" .
             "{$data['footer']}\n\n" .
@@ -34,16 +32,20 @@ class TelegramFormatter
         };
     }
 
-    private function formatSummary($text)
+    private function normalizeText($text)
     {
-        // تقسيم الأسطر
-        $lines = explode("\n", $text);
+        // حذف عنوان التقرير إذا موجود
+        $text = preg_replace('/📊.*?\n/u', '', $text);
 
-        // حذف الأسطر الفارغة الزائدة
-        $lines = array_filter(array_map('trim', $lines));
+        // تحويل كل أنواع الأسطر لـ \n
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
 
-        // إعادة دمج مع مسافات واضحة
-        return implode("\n\n", $lines);
+        // حذف الفراغات الزائدة
+        $text = trim($text);
+
+        // حذف التكرار في الأسطر الفارغة
+        $text = preg_replace("/\n{2,}/", "\n\n", $text);
+
+        return $text;
     }
-
 }
