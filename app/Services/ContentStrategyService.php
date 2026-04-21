@@ -10,7 +10,7 @@ use App\Services\Content\SocialBuilder;
 
 class ContentStrategyService
 {
-    public function decide($stats, Request $request)
+    public function decide($stats, Request $request, $narrative = null)
     {
         $schedule = $request->get('schedule');
         if ($schedule) {
@@ -44,7 +44,7 @@ class ContentStrategyService
         if ($type === 'report') {
             $schedule = $request->get('schedule');
             $lang = $request->get('lang', 'ar');
-            return app(ReportBuilder::class)->build($stats, $lang, $schedule);
+            return app(ReportBuilder::class)->build($stats, $lang, $schedule, $narrative);
         }
 
         if ($type === 'insight') {
@@ -96,7 +96,7 @@ class ContentStrategyService
         return match ($topType) {
             'alert' => app(AlertBuilder::class)->build($stats),
             'insight' => app(InsightBuilder::class)->build($stats),
-            'report' => app(ReportBuilder::class)->build($stats),
+            'report' => app(ReportBuilder::class)->build($stats, 'ar', null, $narrative),
             'social' => app(SocialBuilder::class)->build($stats),
         };
     }
