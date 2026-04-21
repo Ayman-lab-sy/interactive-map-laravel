@@ -14,15 +14,17 @@ class TelegramFormatter
             'alert' => "🚨 {$data['text']}",
 
             'report' => 
-            $this->cleanSummary($data['summary']) . "\n\n" .
+            "📊 تقرير ميداني\n\n" .
 
-            "━━━━━━━━━━━━━━\n" .
+            trim($data['summary']) . "\n\n" .
+
+            "──────────────\n" .
             "{$data['footer']}\n\n" .
 
-            "📍 تابع الأحداث على الخريطة التفاعلية:\n" .
-            "https://www.thealawites.com/ar/map\n\n" .
+            "📍 تابع الأحداث على الخريطة:\n" .
+            "https://your-website-link.com\n\n" .
 
-            "#سوريا #تقارير #أحداث",
+            "#سوريا #تقارير #خريطة_تفاعلية",
 
             'insight' => "📈 تحليل:\n\n{$data['text']}\n\n#سوريا",
 
@@ -44,18 +46,4 @@ class TelegramFormatter
         return implode("\n\n", $lines);
     }
 
-    private function cleanSummary($text)
-    {
-        // حذف أي عنوان مكرر (مثل 📊 تقرير)
-        $text = preg_replace('/^📊.*\n/', '', $text);
-
-        // إزالة \n الزائدة
-        $text = trim($text);
-
-        // ترتيب الأسطر
-        $lines = explode("\n", $text);
-        $lines = array_filter(array_map('trim', $lines));
-
-        return implode("\n\n", $lines);
-    }
 }
