@@ -4,17 +4,17 @@ namespace App\Services\Content;
 
 class ReportBuilder
 {
-    public function build($stats, $lang = 'ar', $schedule = null)
+    public function build($stats, $lang = 'ar', $schedule = null, $narrative = null)
     {
         return $lang === 'en'
             ? $this->buildEnglish($stats)
-            : $this->buildArabic($stats, $schedule);
+            : $this->buildArabic($stats, $schedule, $narrative);
     }
 
     // =========================
     // 🇸🇦 Arabic Version
     // =========================
-    private function buildArabic($stats, $schedule = null)
+    private function buildArabic($stats, $schedule = null, $narrative = null)
     {
         if ($schedule === 'daily') {
             return $this->dailyReportAr($stats);
@@ -45,10 +45,23 @@ class ReportBuilder
             "ما يطرح تساؤلات حول اتجاهات التصعيد القادمة."
         ];
 
+        $trendText = '';
+
+        if ($narrative) {
+            if ($narrative['trend'] === 'sharp_increase') {
+                $trendText = 'تشير البيانات إلى تصاعد حاد في وتيرة الأحداث، ';
+            } elseif ($narrative['trend'] === 'increase') {
+                $trendText = 'تظهر البيانات ارتفاعاً ملحوظاً في الأحداث، ';
+            } elseif ($narrative['trend'] === 'decrease') {
+                $trendText = 'تشير البيانات إلى تراجع في وتيرة الأحداث، ';
+            } else {
+                $trendText = 'تعكس البيانات حالة مستقرة نسبياً، ';
+            }
+        }
         $hook = $this->pick($hooks);
         $analysisText = $this->pick($analysis);
 
-        $summary = "{$hook} حيث تم تسجيل {$total} حادثة موثقة، "
+        $summary = "{$trendText}{$hook} حيث تم تسجيل {$total} حادثة موثقة، "
             . "تصدرت {$gov} المشهد بـ {$count} حالة، {$analysisText}";
 
         return [
