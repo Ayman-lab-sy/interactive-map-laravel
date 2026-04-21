@@ -14,7 +14,6 @@ class MediaController extends Controller
     public function generatePost(Request $request)
     {
         $content = app(\App\Services\MediaService::class)->generatePost($request);
-
         return response()->json([
             'post' => $content
         ]);
@@ -28,13 +27,9 @@ class MediaController extends Controller
     public function publish(Request $request)
     {
         $post = app(MediaService::class)->generatePost($request);
-
         $imagePath = app(MediaImageService::class)->generate($request, $post);
-
         $channels = $request->get('channels', ['telegram']);
-
         app(PublisherService::class)->publish($imagePath, $post, $channels);
-
         return response()->json([
             'status' => 'sent',
             'channels' => $channels,
