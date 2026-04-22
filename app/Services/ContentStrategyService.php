@@ -16,10 +16,7 @@ class ContentStrategyService
         if ($schedule) {
             switch ($schedule) {
                 case 'daily':
-                    $request->merge(['range' => 'today']);
-                    break;
-                case 'yesterday':
-                    $request->merge(['days' => 1]);
+                    $request->merge(['range' => 'yesterday']);
                     break;
                 case 'weekly':
                     $request->merge(['range' => 'week']);

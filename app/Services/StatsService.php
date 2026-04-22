@@ -10,7 +10,6 @@ class StatsService
     public function getStats(Request $request)
     {
         $query = Event::where('status', 'verified');
-
         // 🎯 فلتر المحافظة
         if ($request->filled('governorate')) {
             $query->where('governorate', $request->governorate);
@@ -33,6 +32,13 @@ class StatsService
                 ]);
             }
 
+            elseif ($request->range === 'yesterday') {
+
+                $yesterday = now()->subDay();
+
+                $query->whereDate('event_date', $yesterday->toDateString());
+            }
+
             if ($request->range === 'week') {
                 $query->where('event_date', '>=', now()->subDays(7));
             }
@@ -44,7 +50,6 @@ class StatsService
 
         // 📊 إجمالي
         $total = (clone $query)->count();
-
         // 🔥 مقارنة زمنية (يدعم days + range)
         $previousPeriod = null;
 
@@ -85,6 +90,25 @@ class StatsService
                         now()->subDays(1)->startOfDay(),
                         now()->subDays(1)->endOfDay()
                     ])
+                    ->count();
+            }
+
+            elseif ($request->range === 'yesterday') {
+
+                $yesterday = now()->subDay();
+                $beforeYesterday = now()->subDays(2);
+
+                $previousPeriod = Event::where('status', 'verified')
+
+                   // نفس الفلاتر
+                    ->when($request->filled('governorate'), function ($q) use ($request) {
+                        $q->where('governorate', $request->governorate);
+                    })
+                    ->when($request->filled('category'), function ($q) use ($request) {
+                        $q->where('category', 'like', '%' . $request->category . '%');
+                    })
+
+                    ->whereDate('event_date', $beforeYesterday->toDateString())
                     ->count();
             }
         }

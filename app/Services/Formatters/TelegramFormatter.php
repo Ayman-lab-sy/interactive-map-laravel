@@ -14,13 +14,13 @@ class TelegramFormatter
             'alert' => "🚨 {$data['text']}",
 
             'report' => 
-            $this->normalizeText($data['summary']) . "\n\n" .
+            $this->addSpacing($data['summary']) . "\n\n" .
 
             "──────────────\n" .
             "{$data['footer']}\n\n" .
 
             "📍 تابع الأحداث على الخريطة:\n" .
-            "https://your-website-link.com\n\n" .
+            "https://www.thealawites.com/ar/map\n\n" .
 
             "#سوريا #تقارير #خريطة_تفاعلية",
 
@@ -32,19 +32,14 @@ class TelegramFormatter
         };
     }
 
-    private function normalizeText($text)
+    private function addSpacing($text)
     {
-        // حذف عنوان التقرير إذا موجود
-        $text = preg_replace('/📊.*?\n/u', '', $text);
+        // نفصل أول سطر (العنوان) عن الباقي
+        $parts = explode("\n", $text, 2);
 
-        // تحويل كل أنواع الأسطر لـ \n
-        $text = str_replace(["\r\n", "\r"], "\n", $text);
-
-        // حذف الفراغات الزائدة
-        $text = trim($text);
-
-        // حذف التكرار في الأسطر الفارغة
-        $text = preg_replace("/\n{2,}/", "\n\n", $text);
+        if (count($parts) === 2) {
+            return $parts[0] . "\n\n" . $parts[1];
+        }
 
         return $text;
     }

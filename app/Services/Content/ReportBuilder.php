@@ -17,15 +17,15 @@ class ReportBuilder
     private function buildArabic($stats, $schedule = null, $narrative = null)
     {
         if ($schedule === 'daily') {
-            return $this->dailyReportAr($stats);
+            return $this->dailyReportAr($stats, $narrative);
         }
 
         if ($schedule === 'weekly') {
-            return $this->weeklyReportAr($stats);
+            return $this->weeklyReportAr($stats, $narrative);
         }
 
         if ($schedule === 'monthly') {
-            return $this->monthlyReportAr($stats);
+            return $this->monthlyReportAr($stats, $narrative);
         }
         $total = $stats['total'] ?? 0;
         $gov = $stats['top_governorate']->governorate ?? 'عدة مناطق';
@@ -91,13 +91,13 @@ class ReportBuilder
 
         if ($narrative) {
             if ($narrative['trend'] === 'sharp_increase') {
-                $headline = '🚨 تصاعد حاد في الأحداث\n';
+                $headline = "🚨 تصاعد حاد في الأحداث\n";
             } elseif ($narrative['trend'] === 'increase') {
-                $headline = '⚠️ ارتفاع ملحوظ في الأحداث\n';
+                $headline = "⚠️ ارتفاع ملحوظ في الأحداث\n";
             } elseif ($narrative['trend'] === 'decrease') {
-                $headline = '📉 تراجع في وتيرة الأحداث\n';
+                $headline = "📉 تراجع في وتيرة الأحداث\n";
             } else {
-                $headline = '📊 استقرار نسبي في الأحداث\n';
+                $headline = "📊 استقرار نسبي في الأحداث\n";
             }
         }
         $summary = "{$headline}{$trendText}{$riskText}{$contextText}{$hook} حيث تم تسجيل {$total} حادثة موثقة، "
@@ -158,20 +158,73 @@ class ReportBuilder
         return $arr[array_rand($arr)];
     }
 
-    private function dailyReportAr($stats)
+    private function dailyReportAr($stats, $narrative = null)
     {
-        $total = $stats['total'] ?? 0;
+        $today = $stats['total'] ?? 0;
+        $previous = $stats['previous'] ?? 0;
+
         $gov = $stats['top_governorate']->governorate ?? 'عدة مناطق';
 
-        return [
-            'type' => 'report',
-            'priority' => 'medium',
-            'data' => [
-                'title' => "📊 التقرير اليومي",
-                'summary' => "تم تسجيل {$total} حادثة خلال اليوم، تركزت في {$gov}.",
-                'footer' => "⚠️ بيانات يومية أولية"
-            ]
-        ];
+        // 🧠 المقارنة
+        $diff = $today - $previous;
+        $changeText = '';
+
+        if ($previous > 0) {
+            $percent = round(($diff / $previous) * 100);
+
+            if ($diff > 0) {
+                $changeText = "بارتفاع بنسبة {$percent}% مقارنة باليوم السابق";
+            } elseif ($diff < 0) {
+                $changeText = "بانخفاض بنسبة " . abs($percent) . "% مقارنة باليوم السابق";
+            } else {
+                $changeText = "دون تغير ملحوظ مقارنة باليوم السابق";
+            }
+        }
+
+       // 🧠 Narrative (خفيف — بدون تخبيص)
+       $trendText = '';
+       $riskText = '';
+
+       if ($narrative) {
+           if ($narrative['trend'] === 'sharp_increase') {
+               $trendText = 'تشير البيانات إلى تصاعد حاد، ';
+           } elseif ($narrative['trend'] === 'increase') {
+               $trendText = 'تظهر البيانات ارتفاعاً، ';
+           } elseif ($narrative['trend'] === 'decrease') {
+               $trendText = 'تشير البيانات إلى تراجع، ';
+           } else {
+               $trendText = 'تعكس البيانات حالة مستقرة، ';
+           }
+
+           if ($narrative['risk'] === 'high') {
+               $riskText = 'بمستوى خطر مرتفع.';
+           } elseif ($narrative['risk'] === 'medium') {
+               $riskText = 'بمستوى خطر متوسط.';
+           } else {
+               $riskText = 'بمستوى خطر منخفض.';
+           }
+       }
+
+       return [
+           'type' => 'report',
+           'priority' => 'medium',
+           'data' => [
+               'title' => "التقرير اليومي",
+               'summary' =>
+                    "📊 سجلت البيانات الميدانية {$today} حادثة موثقة خلال يوم أمس، تركزت بشكل رئيسي في {$gov}.\n\n" .
+
+                    ($previous > 0
+                        ? "📈 يمثل ذلك {$changeText}، ما يعكس تغيراً في وتيرة الأحداث مقارنة باليوم السابق.\n\n"
+                        : "⚠️ لا تتوفر بيانات كافية لإجراء مقارنة دقيقة مع اليوم السابق.\n\n"
+                    ) .
+
+                    ($narrative
+                        ? "{$trendText}{$riskText}"
+                        : ""
+                    ),
+               'footer' => "بيانات مبنية على الأحداث الموثقة"
+           ]
+       ];
     }
 
     private function weeklyReportAr($stats)
